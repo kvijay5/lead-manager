@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import { env } from './config/env';
 import { notFound } from './middleware/notFound';
 import { errorHandler } from './middleware/errorHandler';
+import authRouter from './routes/auth.routes';
 import leadsRouter from './routes/leads.routes';
 
 export const createApp = () => {
@@ -33,6 +34,9 @@ export const createApp = () => {
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+
+  // Auth routes
+  app.use('/api/auth', authRouter);
 
   // Leads routes
   app.use('/api/leads', leadsRouter);
