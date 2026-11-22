@@ -18,7 +18,10 @@ export class AuthService {
 
     if (existing) {
       throw new AppError('An account with this email already exists', 409, [
-        { field: 'email', message: 'An account with this email already exists' },
+        {
+          field: 'email',
+          message: 'An account with this email already exists',
+        },
       ]);
     }
 
