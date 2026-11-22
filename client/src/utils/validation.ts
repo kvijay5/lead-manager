@@ -32,7 +32,7 @@ export const validateField = (
       if (val.length > 254) return 'Email cannot exceed 254 characters';
       return undefined;
 
-    case 'phone':
+    case 'phone': {
       if (!val) return 'Phone number is required';
       if (val.length < 7) return 'Phone number must be at least 7 characters';
       if (val.length > 20) return 'Phone number cannot exceed 20 characters';
@@ -42,6 +42,7 @@ export const validateField = (
       const digitsCount = (val.match(/\d/g) || []).length;
       if (digitsCount < 7) return 'Phone number must contain at least 7 digits';
       return undefined;
+    }
 
     case 'company':
       if (!val) return 'Company is required';

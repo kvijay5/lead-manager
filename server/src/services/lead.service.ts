@@ -129,7 +129,10 @@ export class LeadService {
     }
 
     // If email is changing, check for duplicates (case-insensitive)
-    if (input.email && input.email.toLowerCase() !== existing.email.toLowerCase()) {
+    if (
+      input.email &&
+      input.email.toLowerCase() !== existing.email.toLowerCase()
+    ) {
       const duplicate = await prisma.lead.findFirst({
         where: {
           email: { equals: input.email, mode: 'insensitive' },

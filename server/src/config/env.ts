@@ -5,11 +5,11 @@ import { z } from 'zod';
 dotenv.config();
 
 const envSchema = z.object({
-  DATABASE_URL: z
-    .string()
-    .min(1, 'DATABASE_URL is required'),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
   PORT: z.coerce.number().int().positive().default(4000),
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required').default('change-me'),
   JWT_EXPIRES_IN: z.string().default('7d'),

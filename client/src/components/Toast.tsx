@@ -1,20 +1,11 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
-
-export type ToastType = 'success' | 'error' | 'info';
+import React, { useState, useCallback } from 'react';
+import { ToastContext, ToastType } from '../context/ToastContext';
 
 interface ToastItem {
   id: string;
   message: string;
   type: ToastType;
 }
-
-interface ToastContextValue {
-  showToast: (message: string, type?: ToastType) => void;
-  success: (message: string) => void;
-  error: (message: string) => void;
-}
-
-const ToastContext = createContext<ToastContextValue | undefined>(undefined);
 
 export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
@@ -66,8 +57,8 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
                 isSuccess
                   ? 'bg-emerald-50 border-emerald-200 text-emerald-900'
                   : isError
-                  ? 'bg-rose-50 border-rose-200 text-rose-900'
-                  : 'bg-white border-slate-200 text-slate-800'
+                    ? 'bg-rose-50 border-rose-200 text-rose-900'
+                    : 'bg-white border-slate-200 text-slate-800'
               }`}
             >
               {/* Icon */}
@@ -151,12 +142,4 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({
       </div>
     </ToastContext.Provider>
   );
-};
-
-export const useToast = (): ToastContextValue => {
-  const context = useContext(ToastContext);
-  if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
-  }
-  return context;
 };

@@ -38,11 +38,21 @@ export async function request<T>(
       return {} as T;
     }
 
-    let payload: any = null;
+    let payload: {
+      error?: {
+        message?: string;
+        details?: ApiErrorDetail[];
+      };
+    } | null = null;
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       try {
-        payload = await response.json();
+        payload = (await response.json()) as {
+          error?: {
+            message?: string;
+            details?: ApiErrorDetail[];
+          };
+        };
       } catch {
         // Ignore JSON parse failure
       }
@@ -50,7 +60,8 @@ export async function request<T>(
 
     if (!response.ok) {
       const message =
-        payload?.error?.message || `Request failed with status ${response.status}`;
+        payload?.error?.message ||
+        `Request failed with status ${response.status}`;
       const details = payload?.error?.details;
       throw new ApiError(message, response.status, details);
     }

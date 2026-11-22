@@ -41,7 +41,9 @@ export const errorHandler = (
     const response: StandardErrorResponse = {
       error: {
         message: err.message,
-        ...(err.details && err.details.length > 0 ? { details: err.details } : {}),
+        ...(err.details && err.details.length > 0
+          ? { details: err.details }
+          : {}),
       },
     };
 
