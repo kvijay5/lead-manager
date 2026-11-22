@@ -1,0 +1,114 @@
+### Variable Definitions
+@baseUrl = http://localhost:4000/api
+
+### 1. Health Check
+GET {{baseUrl}}/health
+Accept: application/json
+
+### 2. Create Valid Lead 1 (Alice Johnson)
+# @name createLead1
+POST {{baseUrl}}/leads
+Content-Type: application/json
+
+{
+  "name": "Alice Johnson",
+  "email": "alice.johnson@example.com",
+  "phone": "+1 (555) 019-2834",
+  "company": "Acme Innovations",
+  "source": "WEBSITE",
+  "status": "NEW"
+}
+
+### 3. Create Valid Lead 2 (Bob Smith)
+# @name createLead2
+POST {{baseUrl}}/leads
+Content-Type: application/json
+
+{
+  "name": "Bob Smith",
+  "email": "bob.smith@techcorp.com",
+  "phone": "+1-555-432-1098",
+  "company": "TechCorp Solutions",
+  "source": "REFERRAL",
+  "status": "QUALIFIED"
+}
+
+### 4. Create Lead with Invalid Email (Expect 400 with details)
+POST {{baseUrl}}/leads
+Content-Type: application/json
+
+{
+  "name": "Invalid Email Lead",
+  "email": "not-an-email",
+  "phone": "+1 (555) 123-4567",
+  "company": "Test Co",
+  "source": "WEBSITE"
+}
+
+### 5. Create Lead with Missing Required Fields (Expect 400 with details)
+POST {{baseUrl}}/leads
+Content-Type: application/json
+
+{
+  "name": "X"
+}
+
+### 6. Create Duplicate Lead Email (Expect 409 Conflict)
+POST {{baseUrl}}/leads
+Content-Type: application/json
+
+{
+  "name": "Alice Duplicate",
+  "email": "alice.johnson@example.com",
+  "phone": "+1 (555) 999-8877",
+  "company": "Another Co",
+  "source": "LINKEDIN"
+}
+
+### 7. List All Leads (Default: page 1, limit 10, sort createdAt desc)
+GET {{baseUrl}}/leads
+Accept: application/json
+
+### 8. List Leads with Custom Pagination and Sorting
+GET {{baseUrl}}/leads?page=1&limit=1&sortBy=name&order=asc
+Accept: application/json
+
+### 9. Search Leads by Name (Case-insensitive)
+GET {{baseUrl}}/leads?search=alice
+Accept: application/json
+
+### 10. Filter Leads by Status
+GET {{baseUrl}}/leads?status=QUALIFIED
+Accept: application/json
+
+### 11. Combined Search and Status Filter
+GET {{baseUrl}}/leads?search=techcorp&status=QUALIFIED
+Accept: application/json
+
+### 12. Get Lead by ID (Replace with an existing ID from Create response)
+GET {{baseUrl}}/leads/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+### 13. Get Lead with Invalid UUID Format (Expect 400)
+GET {{baseUrl}}/leads/not-a-valid-uuid
+Accept: application/json
+
+### 14. Get Lead with Nonexistent UUID (Expect 404)
+GET {{baseUrl}}/leads/11111111-1111-1111-1111-111111111111
+Accept: application/json
+
+### 15. Update Lead (Replace with valid ID)
+PUT {{baseUrl}}/leads/00000000-0000-0000-0000-000000000000
+Content-Type: application/json
+
+{
+  "status": "CONTACTED",
+  "company": "Acme Innovations Global"
+}
+
+### 16. Delete Lead (Replace with valid ID - Expect 204)
+DELETE {{baseUrl}}/leads/00000000-0000-0000-0000-000000000000
+
+### 17. Verify Deleted Lead is Gone (Expect 404)
+GET {{baseUrl}}/leads/00000000-0000-0000-0000-000000000000
+Accept: application/json
