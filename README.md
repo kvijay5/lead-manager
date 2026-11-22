@@ -1,5 +1,8 @@
 # Lead Manager — Full-Stack CRM Dashboard
 
+> 🚀 **Live Production Application:** [https://client-kvijay5.vercel.app](https://client-kvijay5.vercel.app)  
+> 🔗 **Backend API Health:** [https://backend-production-0ee66e80.up.railway.app/api/health](https://backend-production-0ee66e80.up.railway.app/api/health)
+
 A clean, production-grade Lead Management application built with **React 18**, **Node.js/Express**, **TypeScript**, **PostgreSQL 16**, and **Prisma ORM**. Features strict multi-user data isolation, real-time pipeline status aggregations, debounced multi-field searching, server-side pagination, sortable columns, and an accessible, responsive SaaS dashboard.
 
 ---
