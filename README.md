@@ -173,6 +173,10 @@ The backend test suite executes 36 automated unit and integration tests against 
 ```bash
 cd server
 
+# Setup test database (first time only)
+docker exec lead-manager-postgres psql -U postgres -c "CREATE DATABASE lead_manager_test;" 2>/dev/null || true
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/lead_manager_test?schema=public" npx prisma migrate deploy
+
 # Run full Vitest test suite once
 npm test
 
