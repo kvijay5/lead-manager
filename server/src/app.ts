@@ -20,9 +20,19 @@ export const createApp = () => {
   }
 
   // Configure CORS
+  const allowedOrigins = env.CLIENT_ORIGIN.split(',').map((o) => o.trim());
   app.use(
     cors({
-      origin: env.CLIENT_ORIGIN,
+      origin: (origin, callback) => {
+        if (
+          !origin ||
+          allowedOrigins.includes(origin) ||
+          allowedOrigins.includes('*')
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      },
       credentials: true,
     })
   );
