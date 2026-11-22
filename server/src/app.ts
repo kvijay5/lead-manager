@@ -3,6 +3,7 @@ import cors from 'cors';
 import { env } from './config/env';
 import { notFound } from './middleware/notFound';
 import { errorHandler } from './middleware/errorHandler';
+import leadsRouter from './routes/leads.routes';
 
 export const createApp = () => {
   const app = express();
@@ -22,6 +23,9 @@ export const createApp = () => {
   app.get('/api/health', (_req, res) => {
     res.status(200).json({ status: 'ok' });
   });
+
+  // Leads routes
+  app.use('/api/leads', leadsRouter);
 
   // Handle 404 routes
   app.use(notFound);
