@@ -18,13 +18,18 @@ export class ApiError extends Error {
 const API_BASE_URL =
   import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
+export const AUTH_TOKEN_KEY = 'lead_manager_token';
+
 export async function request<T>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
+  const token = localStorage.getItem(AUTH_TOKEN_KEY);
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(options.headers as Record<string, string>),
   };
 
@@ -63,6 +68,17 @@ export async function request<T>(
         payload?.error?.message ||
         `Request failed with status ${response.status}`;
       const details = payload?.error?.details;
+
+      // Handle 401 Unauthorized for authenticated endpoints (auto-logout)
+      if (
+        response.status === 401 &&
+        !endpoint.includes('/auth/login') &&
+        !endpoint.includes('/auth/signup')
+      ) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
+
       throw new ApiError(message, response.status, details);
     }
 

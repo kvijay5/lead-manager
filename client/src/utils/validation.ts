@@ -8,6 +8,7 @@ export interface FormErrors {
   company?: string;
   source?: string;
   status?: string;
+  password?: string;
 }
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

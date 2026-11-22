@@ -7,6 +7,7 @@ import { LeadModal } from '../components/LeadModal';
 import { LeadTable, SortableField } from '../components/LeadTable';
 import { SearchFilterBar } from '../components/SearchFilterBar';
 import { StatsBar } from '../components/StatsBar';
+import { useAuth } from '../hooks/useAuth';
 import { useLeads } from '../hooks/useLeads';
 import { useToast } from '../hooks/useToast';
 import { CreateLeadPayload, Lead, LeadStats } from '../types/lead';
@@ -14,6 +15,7 @@ import { FormErrors } from '../utils/validation';
 
 export const LeadsPage: React.FC = () => {
   const toast = useToast();
+  const { user, logout } = useAuth();
 
   // Search, Filter, Sort & Pagination State
   const [search, setSearch] = useState('');
@@ -227,13 +229,34 @@ export const LeadsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <span className="text-xs text-slate-500 font-medium hidden sm:inline-block">
               Total Leads:{' '}
               <strong className="text-slate-800 font-semibold">
                 {stats?.total ?? meta.total}
               </strong>
             </span>
+
+            {user && (
+              <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+                <div className="text-right hidden md:block">
+                  <div className="text-xs font-semibold text-slate-800 leading-tight">
+                    {user.name}
+                  </div>
+                  <div className="text-[11px] text-slate-400 font-medium">
+                    {user.email}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300 cursor-pointer"
+                  title="Sign out"
+                >
+                  Sign out
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
