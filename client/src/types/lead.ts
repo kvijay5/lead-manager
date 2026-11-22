@@ -38,6 +38,11 @@ export interface LeadSingleResponse {
   data: Lead;
 }
 
+export interface LeadStats {
+  total: number;
+  byStatus: Record<LeadStatus, number>;
+}
+
 export interface CreateLeadPayload {
   name: string;
   email: string;

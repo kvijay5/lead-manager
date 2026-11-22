@@ -2,6 +2,7 @@ import {
   CreateLeadPayload,
   LeadListResponse,
   LeadSingleResponse,
+  LeadStats,
   ListLeadsParams,
   UpdateLeadPayload,
 } from '../types/lead';
@@ -33,6 +34,19 @@ export async function getLead(
   signal?: AbortSignal
 ): Promise<LeadSingleResponse> {
   return request<LeadSingleResponse>(`/leads/${id}`, { signal });
+}
+
+export async function getLeadStats(signal?: AbortSignal): Promise<LeadStats> {
+  const res = await request<{ data: LeadStats } & LeadStats>('/leads/stats', {
+    signal,
+  });
+  if (res.data) {
+    return res.data;
+  }
+  return {
+    total: res.total,
+    byStatus: res.byStatus,
+  };
 }
 
 export async function createLead(
