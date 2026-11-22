@@ -6,7 +6,11 @@ import {
   STATUS_LABELS,
 } from '../constants/leads';
 import { CreateLeadPayload, Lead, LeadSource, LeadStatus } from '../types/lead';
-import { FormErrors, validateField, validateLeadForm } from '../utils/validation';
+import {
+  FormErrors,
+  validateField,
+  validateLeadForm,
+} from '../utils/validation';
 
 interface LeadFormProps {
   initialLead?: Lead | null;
@@ -44,10 +48,7 @@ export const LeadForm: React.FC<LeadFormProps> = ({
   // Merge client-side validation errors with server-side response errors
   const errors: FormErrors = { ...clientErrors, ...serverErrors };
 
-  const handleChange = (
-    field: keyof CreateLeadPayload,
-    value: string
-  ) => {
+  const handleChange = (field: keyof CreateLeadPayload, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
 
     // If field was already touched, re-validate immediately on change

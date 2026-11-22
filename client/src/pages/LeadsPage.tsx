@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { ApiError } from '../api/http';
 import { createLead, deleteLead, updateLead } from '../api/leads';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LeadForm } from '../components/LeadForm';
 import { LeadModal } from '../components/LeadModal';
 import { LeadTable } from '../components/LeadTable';
 import { SearchFilterBar } from '../components/SearchFilterBar';
-import { useToast } from '../components/Toast';
 import { useLeads } from '../hooks/useLeads';
+import { useToast } from '../hooks/useToast';
 import { CreateLeadPayload, Lead } from '../types/lead';
 import { FormErrors } from '../utils/validation';
 
@@ -69,20 +70,21 @@ export const LeadsPage: React.FC = () => {
 
       handleCloseModal();
       refetch();
-    } catch (err: any) {
-      // Map API validation details to form fields
-      if (err.details && Array.isArray(err.details)) {
-        const mappedErrors: FormErrors = {};
-        err.details.forEach(
-          (detail: { field: string; message: string }) => {
+    } catch (err: unknown) {
+      if (err instanceof ApiError) {
+        if (err.details && Array.isArray(err.details)) {
+          const mappedErrors: FormErrors = {};
+          err.details.forEach((detail) => {
             if (detail.field in formData || detail.field === 'email') {
               mappedErrors[detail.field as keyof FormErrors] = detail.message;
             }
-          }
-        );
-        setServerErrors(mappedErrors);
+          });
+          setServerErrors(mappedErrors);
+        }
+        toast.error(err.message || 'Operation failed. Please try again.');
+      } else {
+        toast.error('An unexpected error occurred. Please try again.');
       }
-      toast.error(err.message || 'Operation failed. Please try again.');
     }
   };
 
@@ -106,8 +108,9 @@ export const LeadsPage: React.FC = () => {
       toast.success(`Deleted lead: ${deletingLead.name}`);
       handleCloseDeleteDialog();
       refetch();
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete lead.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete lead.';
+      toast.error(msg);
     } finally {
       setIsDeleting(false);
     }

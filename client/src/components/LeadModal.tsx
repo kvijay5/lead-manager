@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface LeadModalProps {
   isOpen: boolean;
@@ -13,10 +13,34 @@ export const LeadModal: React.FC<LeadModalProps> = ({
   title,
   children,
 }) => {
+  const modalRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         onClose();
+        return;
+      }
+
+      // Focus trap for Tab navigation
+      if (e.key === 'Tab' && modalRef.current) {
+        const focusableElements =
+          modalRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
       }
     };
 
@@ -48,7 +72,10 @@ export const LeadModal: React.FC<LeadModalProps> = ({
       />
 
       {/* Modal Dialog Container */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-100 overflow-hidden z-10 transition-all transform scale-100">
+      <div
+        ref={modalRef}
+        className="relative bg-white rounded-3xl shadow-2xl max-w-lg w-full border border-slate-100 overflow-hidden z-10 transition-all transform scale-100"
+      >
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
           <h3

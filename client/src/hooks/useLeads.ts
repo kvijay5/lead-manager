@@ -39,7 +39,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
     try {
       const params: ListLeadsParams = {
         search: options.search,
-        status: options.status as any,
+        status: options.status as ListLeadsParams['status'],
         sortBy: options.sortBy,
         order: options.order,
         page: options.page,
@@ -50,11 +50,13 @@ export function useLeads(options: UseLeadsOptions = {}) {
       setLeads(res.data);
       setMeta(res.meta);
       setError(null);
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err: unknown) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
         return;
       }
-      setError(err.message || 'Failed to fetch leads');
+      const message =
+        err instanceof Error ? err.message : 'Failed to fetch leads';
+      setError(message);
     } finally {
       if (abortControllerRef.current === controller) {
         setIsLoading(false);
@@ -70,7 +72,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
   ]);
 
   useEffect(() => {
-    fetchLeads();
+    void fetchLeads();
 
     return () => {
       if (abortControllerRef.current) {

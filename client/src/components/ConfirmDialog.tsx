@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -21,10 +21,34 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   onConfirm,
   onCancel,
 }) => {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && !isConfirming) {
         onCancel();
+        return;
+      }
+
+      // Focus trap for Tab navigation
+      if (e.key === 'Tab' && dialogRef.current) {
+        const focusableElements =
+          dialogRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        } else if (!e.shiftKey && document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
       }
     };
 
@@ -57,7 +81,10 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       />
 
       {/* Dialog Card */}
-      <div className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 p-6 z-10 transition-all transform scale-100">
+      <div
+        ref={dialogRef}
+        className="relative bg-white rounded-3xl shadow-2xl max-w-md w-full border border-slate-100 p-6 z-10 transition-all transform scale-100"
+      >
         <div className="flex items-start gap-4">
           {/* Warning Icon Badge */}
           <div className="w-11 h-11 rounded-2xl bg-rose-50 border border-rose-100 text-rose-600 flex items-center justify-center shrink-0">
