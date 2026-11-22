@@ -15,8 +15,11 @@ export class ApiError extends Error {
   }
 }
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const normalizedBase = rawBaseUrl.replace(/\/+$/, '');
+const API_BASE_URL = normalizedBase.endsWith('/api')
+  ? normalizedBase
+  : `${normalizedBase}/api`;
 
 export const AUTH_TOKEN_KEY = 'lead_manager_token';
 
