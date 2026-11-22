@@ -2,6 +2,7 @@ import { Router } from 'express';
 import {
   createLead,
   listLeads,
+  getLeadStats,
   getLeadById,
   updateLead,
   deleteLead,
@@ -32,6 +33,9 @@ router.get(
   validate({ query: listLeadsQuerySchema }),
   asyncHandler(listLeads)
 );
+
+// Lead statistics (MUST be registered before /:id so 'stats' is not treated as a UUID)
+router.get('/stats', asyncHandler(getLeadStats));
 
 // Get lead by ID
 router.get(

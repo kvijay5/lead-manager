@@ -29,3 +29,11 @@ export const deleteLead = async (req: Request, res: Response) => {
   await leadService.remove(id);
   res.status(204).send();
 };
+
+export const getLeadStats = async (_req: Request, res: Response) => {
+  const stats = await leadService.getStats();
+  res.status(200).json({
+    ...stats,
+    data: stats,
+  });
+};

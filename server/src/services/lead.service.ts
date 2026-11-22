@@ -176,6 +176,49 @@ export class LeadService {
       where: { id },
     });
   }
+
+  /**
+   * Get lead statistics: total leads count and counts per status
+   */
+  async getStats() {
+    const where: Prisma.LeadWhereInput = {
+      userId: null,
+    };
+
+    const [groups, total] = await prisma.$transaction([
+      prisma.lead.groupBy({
+        by: ['status'],
+        where,
+        _count: {
+          _all: true,
+        },
+        orderBy: {
+          status: 'asc',
+        },
+      }),
+      prisma.lead.count({ where }),
+    ]);
+
+    const byStatus = {
+      NEW: 0,
+      CONTACTED: 0,
+      QUALIFIED: 0,
+      LOST: 0,
+    };
+
+    groups.forEach((group) => {
+      const count =
+        typeof group._count === 'object' && group._count !== null
+          ? ((group._count as { _all?: number })._all ?? 0)
+          : 0;
+      byStatus[group.status] = count;
+    });
+
+    return {
+      total,
+      byStatus,
+    };
+  }
 }
 
 export const leadService = new LeadService();
