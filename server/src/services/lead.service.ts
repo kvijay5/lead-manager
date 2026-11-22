@@ -12,10 +12,10 @@ export class LeadService {
    * Create a new lead
    */
   async create(input: CreateLeadInput) {
-    // Check for duplicate email (when userId is null)
+    // Check for duplicate email (case-insensitive, when userId is null)
     const existing = await prisma.lead.findFirst({
       where: {
-        email: input.email,
+        email: { equals: input.email, mode: 'insensitive' },
         userId: null,
       },
     });
@@ -128,11 +128,11 @@ export class LeadService {
       throw new AppError(`Lead with ID '${id}' not found`, 404);
     }
 
-    // If email is changing, check for duplicates
-    if (input.email && input.email !== existing.email) {
+    // If email is changing, check for duplicates (case-insensitive)
+    if (input.email && input.email.toLowerCase() !== existing.email.toLowerCase()) {
       const duplicate = await prisma.lead.findFirst({
         where: {
-          email: input.email,
+          email: { equals: input.email, mode: 'insensitive' },
           userId: null,
           NOT: { id },
         },
