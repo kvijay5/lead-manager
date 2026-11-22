@@ -1,27 +1,40 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ApiError } from '../api/http';
-import { createLead, deleteLead, updateLead } from '../api/leads';
+import { createLead, deleteLead, getLeadStats, updateLead } from '../api/leads';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { LeadForm } from '../components/LeadForm';
 import { LeadModal } from '../components/LeadModal';
-import { LeadTable } from '../components/LeadTable';
+import { LeadTable, SortableField } from '../components/LeadTable';
 import { SearchFilterBar } from '../components/SearchFilterBar';
+import { StatsBar } from '../components/StatsBar';
 import { useLeads } from '../hooks/useLeads';
 import { useToast } from '../hooks/useToast';
-import { CreateLeadPayload, Lead } from '../types/lead';
+import { CreateLeadPayload, Lead, LeadStats } from '../types/lead';
 import { FormErrors } from '../utils/validation';
 
 export const LeadsPage: React.FC = () => {
   const toast = useToast();
 
-  // Search & Filter State
+  // Search, Filter, Sort & Pagination State
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
+  const [sortBy, setSortBy] = useState<SortableField>('createdAt');
+  const [order, setOrder] = useState<'asc' | 'desc'>('desc');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+
+  // Statistics State
+  const [stats, setStats] = useState<LeadStats | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = useState(false);
 
   // Data fetching hook (with AbortController race-safety)
   const { leads, meta, isLoading, error, refetch } = useLeads({
     search,
     status,
+    sortBy,
+    order,
+    page,
+    limit,
   });
 
   // Modal State
@@ -32,6 +45,51 @@ export const LeadsPage: React.FC = () => {
   // Delete Confirmation State
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Fetch Dashboard Statistics
+  const fetchStats = useCallback(async () => {
+    setIsStatsLoading(true);
+    try {
+      const data = await getLeadStats();
+      setStats(data);
+    } catch {
+      // Non-blocking: stats failure shouldn't crash the table
+    } finally {
+      setIsStatsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void fetchStats();
+  }, [fetchStats]);
+
+  // Search change handler with page reset
+  const handleSearchChange = useCallback((newSearch: string) => {
+    setSearch(newSearch);
+    setPage(1);
+  }, []);
+
+  // Status filter change handler with page reset
+  const handleStatusChange = useCallback((newStatus: string) => {
+    setStatus(newStatus);
+    setPage(1);
+  }, []);
+
+  // Sorting handler
+  const handleSort = (field: SortableField) => {
+    if (sortBy === field) {
+      setOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setOrder('asc');
+    }
+  };
+
+  // Page limit change handler
+  const handleLimitChange = (newLimit: number) => {
+    setLimit(newLimit);
+    setPage(1);
+  };
 
   // Open Add Modal
   const handleOpenAddModal = () => {
@@ -69,7 +127,8 @@ export const LeadsPage: React.FC = () => {
       }
 
       handleCloseModal();
-      refetch();
+      void refetch();
+      void fetchStats();
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         if (err.details && Array.isArray(err.details)) {
@@ -107,7 +166,14 @@ export const LeadsPage: React.FC = () => {
       await deleteLead(deletingLead.id);
       toast.success(`Deleted lead: ${deletingLead.name}`);
       handleCloseDeleteDialog();
-      refetch();
+
+      // If the last lead on a page > 1 was deleted, go back to previous page
+      if (leads.length === 1 && page > 1) {
+        setPage((prev) => prev - 1);
+      } else {
+        void refetch();
+      }
+      void fetchStats();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to delete lead.';
       toast.error(msg);
@@ -120,6 +186,7 @@ export const LeadsPage: React.FC = () => {
   const handleResetFilters = () => {
     setSearch('');
     setStatus('');
+    setPage(1);
   };
 
   const isFiltered = Boolean(search || status);
@@ -164,7 +231,7 @@ export const LeadsPage: React.FC = () => {
             <span className="text-xs text-slate-500 font-medium hidden sm:inline-block">
               Total Leads:{' '}
               <strong className="text-slate-800 font-semibold">
-                {meta.total}
+                {stats?.total ?? meta.total}
               </strong>
             </span>
           </div>
@@ -186,12 +253,20 @@ export const LeadsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Dashboard Statistics Bar */}
+        <StatsBar
+          stats={stats}
+          selectedStatus={status}
+          onSelectStatus={handleStatusChange}
+          isLoading={isStatsLoading}
+        />
+
         {/* Search & Filter Controls */}
         <SearchFilterBar
           initialSearch={search}
-          onSearchChange={setSearch}
+          onSearchChange={handleSearchChange}
           status={status}
-          onStatusChange={setStatus}
+          onStatusChange={handleStatusChange}
           onAddLead={handleOpenAddModal}
         />
 
@@ -231,11 +306,20 @@ export const LeadsPage: React.FC = () => {
           </div>
         )}
 
-        {/* Leads Table Component */}
+        {/* Leads Table Component with Sorting and Pagination */}
         <LeadTable
           leads={leads}
           isLoading={isLoading}
           isFiltered={isFiltered}
+          sortBy={sortBy}
+          order={order}
+          onSort={handleSort}
+          page={page}
+          limit={limit}
+          total={meta.total}
+          totalPages={meta.totalPages}
+          onPageChange={setPage}
+          onLimitChange={handleLimitChange}
           onEdit={handleOpenEditModal}
           onDelete={handleOpenDeleteDialog}
           onAddLead={handleOpenAddModal}

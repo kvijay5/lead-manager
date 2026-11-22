@@ -1,12 +1,24 @@
 import React from 'react';
 import { SOURCE_LABELS } from '../constants/leads';
 import { Lead } from '../types/lead';
+import { Pagination } from './Pagination';
 import { StatusBadge } from './StatusBadge';
+
+export type SortableField = 'name' | 'company' | 'status' | 'createdAt';
 
 interface LeadTableProps {
   leads: Lead[];
   isLoading: boolean;
   isFiltered: boolean;
+  sortBy: SortableField;
+  order: 'asc' | 'desc';
+  onSort: (field: SortableField) => void;
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  onPageChange: (newPage: number) => void;
+  onLimitChange: (newLimit: number) => void;
   onEdit: (lead: Lead) => void;
   onDelete: (lead: Lead) => void;
   onAddLead: () => void;
@@ -17,11 +29,80 @@ export const LeadTable: React.FC<LeadTableProps> = ({
   leads,
   isLoading,
   isFiltered,
+  sortBy,
+  order,
+  onSort,
+  page,
+  limit,
+  total,
+  totalPages,
+  onPageChange,
+  onLimitChange,
   onEdit,
   onDelete,
   onAddLead,
   onResetFilters,
 }) => {
+  const renderSortIndicator = (field: SortableField) => {
+    const isActive = sortBy === field;
+
+    return (
+      <span
+        className={`inline-flex items-center ml-1.5 transition-colors ${
+          isActive
+            ? 'text-brand-600'
+            : 'text-slate-300 group-hover:text-slate-400'
+        }`}
+      >
+        {isActive ? (
+          order === 'asc' ? (
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M5 15l7-7 7 7"
+              />
+            </svg>
+          ) : (
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2.5}
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          )
+        ) : (
+          <svg
+            className="w-3.5 h-3.5 opacity-40"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+            />
+          </svg>
+        )}
+      </span>
+    );
+  };
+
   // Loading Skeleton State
   if (isLoading) {
     return (
@@ -140,26 +221,57 @@ export const LeadTable: React.FC<LeadTableProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+    <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
       {/* Desktop Table View */}
       <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200/80 text-xs font-semibold uppercase tracking-wider text-slate-500">
               <th scope="col" className="py-3.5 pl-6 pr-3">
-                Lead
+                <button
+                  type="button"
+                  onClick={() => onSort('name')}
+                  className="group inline-flex items-center focus:outline-none hover:text-slate-800"
+                >
+                  <span>Lead</span>
+                  {renderSortIndicator('name')}
+                </button>
               </th>
               <th scope="col" className="py-3.5 px-3">
                 Contact
               </th>
               <th scope="col" className="py-3.5 px-3">
-                Company
+                <button
+                  type="button"
+                  onClick={() => onSort('company')}
+                  className="group inline-flex items-center focus:outline-none hover:text-slate-800"
+                >
+                  <span>Company</span>
+                  {renderSortIndicator('company')}
+                </button>
               </th>
               <th scope="col" className="py-3.5 px-3">
                 Source
               </th>
               <th scope="col" className="py-3.5 px-3">
-                Status
+                <button
+                  type="button"
+                  onClick={() => onSort('status')}
+                  className="group inline-flex items-center focus:outline-none hover:text-slate-800"
+                >
+                  <span>Status</span>
+                  {renderSortIndicator('status')}
+                </button>
+              </th>
+              <th scope="col" className="py-3.5 px-3">
+                <button
+                  type="button"
+                  onClick={() => onSort('createdAt')}
+                  className="group inline-flex items-center focus:outline-none hover:text-slate-800"
+                >
+                  <span>Created</span>
+                  {renderSortIndicator('createdAt')}
+                </button>
               </th>
               <th scope="col" className="py-3.5 pl-3 pr-6 text-right">
                 Actions
@@ -189,17 +301,6 @@ export const LeadTable: React.FC<LeadTableProps> = ({
                       <div>
                         <div className="font-semibold text-slate-900 leading-5">
                           {lead.name}
-                        </div>
-                        <div className="text-xs text-slate-400">
-                          Added{' '}
-                          {new Date(lead.createdAt).toLocaleDateString(
-                            undefined,
-                            {
-                              month: 'short',
-                              day: 'numeric',
-                              year: 'numeric',
-                            }
-                          )}
                         </div>
                       </div>
                     </div>
@@ -238,6 +339,15 @@ export const LeadTable: React.FC<LeadTableProps> = ({
                   {/* Status */}
                   <td className="py-4 px-3 whitespace-nowrap">
                     <StatusBadge status={lead.status} />
+                  </td>
+
+                  {/* Created At Date */}
+                  <td className="py-4 px-3 whitespace-nowrap text-xs text-slate-500">
+                    {new Date(lead.createdAt).toLocaleDateString(undefined, {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })}
                   </td>
 
                   {/* Actions */}
@@ -330,6 +440,16 @@ export const LeadTable: React.FC<LeadTableProps> = ({
                 <span className="text-slate-400 font-medium">Source:</span>
                 <span>{SOURCE_LABELS[lead.source] || lead.source}</span>
               </div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-slate-400 font-medium">Created:</span>
+                <span>
+                  {new Date(lead.createdAt).toLocaleDateString(undefined, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </span>
+              </div>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-100">
@@ -351,6 +471,19 @@ export const LeadTable: React.FC<LeadTableProps> = ({
           </div>
         ))}
       </div>
+
+      {/* Pagination Footer */}
+      {leads.length > 0 && (
+        <Pagination
+          page={page}
+          limit={limit}
+          total={total}
+          totalPages={totalPages}
+          onPageChange={onPageChange}
+          onLimitChange={onLimitChange}
+          disabled={isLoading}
+        />
+      )}
     </div>
   );
 };
