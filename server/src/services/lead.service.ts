@@ -41,6 +41,10 @@ export class LeadService {
 
   /**
    * List leads with filtering, searching, pagination, and sorting
+   * - search: Case-insensitive match on name, email, or company
+   * - status: Filter by specific LeadStatus enum
+   * - pagination: 1-indexed page and limit with total count and totalPages
+   * - sorting: Supports sortBy (name, createdAt, status, company) and order (asc, desc)
    */
   async list(query: ListLeadsQuery) {
     const page = query.page || 1;
