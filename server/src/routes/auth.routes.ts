@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { login, signup } from '../controllers/auth.controller';
+import { getMe, login, signup } from '../controllers/auth.controller';
+import { requireAuth } from '../middleware/auth';
 import { writeRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validate';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -22,5 +23,8 @@ router.post(
   validate({ body: loginSchema }),
   asyncHandler(login)
 );
+
+// Get current user profile
+router.get('/me', requireAuth, asyncHandler(getMe));
 
 export default router;

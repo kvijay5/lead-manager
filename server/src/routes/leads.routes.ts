@@ -7,6 +7,7 @@ import {
   updateLead,
   deleteLead,
 } from '../controllers/leads.controller';
+import { requireAuth } from '../middleware/auth';
 import { validate } from '../middleware/validate';
 import { writeRateLimiter } from '../middleware/rateLimiter';
 import { asyncHandler } from '../utils/asyncHandler';
@@ -18,6 +19,9 @@ import {
 } from '../validation/lead.schemas';
 
 const router = Router();
+
+// Protect all /api/leads routes with JWT authentication
+router.use(requireAuth);
 
 // Create lead (rate-limited write)
 router.post(

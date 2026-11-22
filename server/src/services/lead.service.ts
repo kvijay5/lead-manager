@@ -9,14 +9,14 @@ import {
 
 export class LeadService {
   /**
-   * Create a new lead
+   * Create a new lead for a specific authenticated user
    */
-  async create(input: CreateLeadInput) {
-    // Check for duplicate email (case-insensitive, when userId is null)
+  async create(userId: string, input: CreateLeadInput) {
+    // Check for duplicate email scoped to this user (case-insensitive)
     const existing = await prisma.lead.findFirst({
       where: {
         email: { equals: input.email, mode: 'insensitive' },
-        userId: null,
+        userId,
       },
     });
 
@@ -34,25 +34,21 @@ export class LeadService {
         company: input.company,
         source: input.source,
         status: input.status,
-        userId: null,
+        userId,
       },
     });
   }
 
   /**
-   * List leads with filtering, searching, pagination, and sorting
-   * - search: Case-insensitive match on name, email, or company
-   * - status: Filter by specific LeadStatus enum
-   * - pagination: 1-indexed page and limit with total count and totalPages
-   * - sorting: Supports sortBy (name, createdAt, status, company) and order (asc, desc)
+   * List leads for a specific authenticated user with filtering, searching, pagination, and sorting
    */
-  async list(query: ListLeadsQuery) {
+  async list(userId: string, query: ListLeadsQuery) {
     const page = query.page || 1;
     const limit = query.limit || 10;
     const skip = (page - 1) * limit;
 
     const where: Prisma.LeadWhereInput = {
-      userId: null,
+      userId,
     };
 
     if (query.status) {
@@ -96,13 +92,14 @@ export class LeadService {
   }
 
   /**
-   * Get a single lead by ID
+   * Get a single lead by ID scoped to the authenticated user
+   * Returns 404 if not found or belongs to another user
    */
-  async getById(id: string) {
+  async getById(userId: string, id: string) {
     const lead = await prisma.lead.findFirst({
       where: {
         id,
-        userId: null,
+        userId,
       },
     });
 
@@ -114,13 +111,13 @@ export class LeadService {
   }
 
   /**
-   * Update an existing lead
+   * Update an existing lead scoped to the authenticated user
    */
-  async update(id: string, input: UpdateLeadInput) {
+  async update(userId: string, id: string, input: UpdateLeadInput) {
     const existing = await prisma.lead.findFirst({
       where: {
         id,
-        userId: null,
+        userId,
       },
     });
 
@@ -128,7 +125,7 @@ export class LeadService {
       throw new AppError(`Lead with ID '${id}' not found`, 404);
     }
 
-    // If email is changing, check for duplicates (case-insensitive)
+    // If email is changing, check for duplicates for this user (case-insensitive)
     if (
       input.email &&
       input.email.toLowerCase() !== existing.email.toLowerCase()
@@ -136,7 +133,7 @@ export class LeadService {
       const duplicate = await prisma.lead.findFirst({
         where: {
           email: { equals: input.email, mode: 'insensitive' },
-          userId: null,
+          userId,
           NOT: { id },
         },
       });
@@ -158,13 +155,13 @@ export class LeadService {
   }
 
   /**
-   * Delete a lead by ID
+   * Delete a lead by ID scoped to the authenticated user
    */
-  async remove(id: string) {
+  async remove(userId: string, id: string) {
     const existing = await prisma.lead.findFirst({
       where: {
         id,
-        userId: null,
+        userId,
       },
     });
 
@@ -178,11 +175,11 @@ export class LeadService {
   }
 
   /**
-   * Get lead statistics: total leads count and counts per status
+   * Get lead statistics for the authenticated user
    */
-  async getStats() {
+  async getStats(userId: string) {
     const where: Prisma.LeadWhereInput = {
-      userId: null,
+      userId,
     };
 
     const [groups, total] = await prisma.$transaction([
