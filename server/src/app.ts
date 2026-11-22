@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import morgan from 'morgan';
 import { env } from './config/env';
 import { notFound } from './middleware/notFound';
 import { errorHandler } from './middleware/errorHandler';
@@ -7,6 +9,14 @@ import leadsRouter from './routes/leads.routes';
 
 export const createApp = () => {
   const app = express();
+
+  // Security HTTP headers
+  app.use(helmet());
+
+  // Request logger (development only)
+  if (env.NODE_ENV === 'development') {
+    app.use(morgan('dev'));
+  }
 
   // Configure CORS
   app.use(
@@ -16,8 +26,8 @@ export const createApp = () => {
     })
   );
 
-  // Parse JSON bodies
-  app.use(express.json());
+  // Parse JSON bodies with strict size limit (prevents payload exhaustion)
+  app.use(express.json({ limit: '10kb' }));
 
   // Health check route
   app.get('/api/health', (_req, res) => {

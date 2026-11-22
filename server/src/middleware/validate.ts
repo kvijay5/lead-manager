@@ -1,10 +1,10 @@
 import { RequestHandler } from 'express';
-import { AnyZodObject, ZodEffects } from 'zod';
+import { ZodTypeAny } from 'zod';
 
 export interface ValidationTargets {
-  body?: AnyZodObject | ZodEffects<any>;
-  query?: AnyZodObject | ZodEffects<any>;
-  params?: AnyZodObject | ZodEffects<any>;
+  body?: ZodTypeAny;
+  query?: ZodTypeAny;
+  params?: ZodTypeAny;
 }
 
 export const validate = (schemas: ValidationTargets): RequestHandler => {
@@ -12,7 +12,7 @@ export const validate = (schemas: ValidationTargets): RequestHandler => {
     try {
       if (schemas.params) {
         const parsedParams = schemas.params.parse(req.params);
-        req.params = parsedParams;
+        req.params = parsedParams as Record<string, string>;
       }
       if (schemas.query) {
         const parsedQuery = schemas.query.parse(req.query);

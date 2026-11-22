@@ -7,6 +7,7 @@ import {
   deleteLead,
 } from '../controllers/leads.controller';
 import { validate } from '../middleware/validate';
+import { writeRateLimiter } from '../middleware/rateLimiter';
 import { asyncHandler } from '../utils/asyncHandler';
 import {
   createLeadSchema,
@@ -17,9 +18,10 @@ import {
 
 const router = Router();
 
-// Create lead
+// Create lead (rate-limited write)
 router.post(
   '/',
+  writeRateLimiter,
   validate({ body: createLeadSchema }),
   asyncHandler(createLead)
 );
@@ -38,16 +40,18 @@ router.get(
   asyncHandler(getLeadById)
 );
 
-// Update lead by ID
+// Update lead by ID (rate-limited write)
 router.put(
   '/:id',
+  writeRateLimiter,
   validate({ params: idParamSchema, body: updateLeadSchema }),
   asyncHandler(updateLead)
 );
 
-// Delete lead by ID
+// Delete lead by ID (rate-limited write)
 router.delete(
   '/:id',
+  writeRateLimiter,
   validate({ params: idParamSchema }),
   asyncHandler(deleteLead)
 );
